@@ -1,0 +1,71 @@
+Region,Date,Risk_Probability,Risk_Level,Temp_14d_Mean,Humidity_14d_Mean,Degree_Days_30d
+Grabouw,2026-08-12,0.3594,MODERATE (Inspect Traps),12.2,73.1,51.7
+Grabouw,2026-08-13,0.3594,MODERATE (Inspect Traps),12.4,72.6,57.2
+Grabouw,2026-08-14,0.3594,MODERATE (Inspect Traps),12.5,73.2,59.4
+Grabouw,2026-08-15,0.3594,MODERATE (Inspect Traps),12.3,76.5,60.4
+Grabouw,2026-08-16,0.3594,MODERATE (Inspect Traps),12.0,79.1,60.8
+Grabouw,2026-08-17,0.3594,MODERATE (Inspect Traps),11.7,81.1,63.2
+Grabouw,2026-08-18,0.3594,MODERATE (Inspect Traps),11.5,82.3,64.2
+Grabouw,2026-08-19,0.3594,MODERATE (Inspect Traps),11.3,82.6,63.9
+Grabouw,2026-08-20,0.3594,MODERATE (Inspect Traps),11.4,81.6,64.2
+Grabouw,2026-08-21,0.3594,MODERATE (Inspect Traps),11.6,81.1,67.3
+Grabouw,2026-08-22,0.3594,MODERATE (Inspect Traps),11.8,80.9,70.0
+Grabouw,2026-08-23,0.3594,MODERATE (Inspect Traps),12.1,80.8,72.1
+Grabouw,2026-08-24,0.3594,MODERATE (Inspect Traps),12.4,80.7,73.0
+Grabouw,2026-08-25,0.3594,MODERATE (Inspect Traps),13.0,79.6,75.6
+Ceres,2026-08-12,0.3594,MODERATE (Inspect Traps),11.7,69.7,46.4
+Ceres,2026-08-13,0.3594,MODERATE (Inspect Traps),12.1,68.8,53.1
+Ceres,2026-08-14,0.3594,MODERATE (Inspect Traps),12.1,69.9,55.4
+Ceres,2026-08-15,0.3594,MODERATE (Inspect Traps),12.2,70.6,57.7
+Ceres,2026-08-16,0.3594,MODERATE (Inspect Traps),12.2,71.4,58.0
+Ceres,2026-08-17,0.3594,MODERATE (Inspect Traps),12.0,72.8,60.4
+Ceres,2026-08-18,0.3594,MODERATE (Inspect Traps),11.8,74.9,63.9
+Ceres,2026-08-19,0.3594,MODERATE (Inspect Traps),11.9,74.4,65.5
+Ceres,2026-08-20,0.3594,MODERATE (Inspect Traps),12.0,73.6,67.2
+Ceres,2026-08-21,0.3594,MODERATE (Inspect Traps),12.2,72.8,70.6
+Ceres,2026-08-22,0.3594,MODERATE (Inspect Traps),12.2,73.6,72.2
+Ceres,2026-08-23,0.3594,MODERATE (Inspect Traps),12.5,73.4,73.2
+Ceres,2026-08-24,0.3594,MODERATE (Inspect Traps),12.9,73.6,74.7
+Ceres,2026-08-25,0.3594,MODERATE (Inspect Traps),13.4,72.9,77.5
+Citrusdal,2026-08-12,0.3727,MODERATE (Inspect Traps),14.3,61.4,107.4
+Citrusdal,2026-08-13,0.3727,MODERATE (Inspect Traps),14.8,60.9,116.5
+Citrusdal,2026-08-14,0.3727,MODERATE (Inspect Traps),14.8,62.3,120.1
+Citrusdal,2026-08-15,0.3727,MODERATE (Inspect Traps),14.8,63.6,122.7
+Citrusdal,2026-08-16,0.3727,MODERATE (Inspect Traps),14.7,64.6,122.6
+Citrusdal,2026-08-17,0.3727,MODERATE (Inspect Traps),14.4,65.9,123.7
+Citrusdal,2026-08-18,0.3727,MODERATE (Inspect Traps),14.2,67.9,128.0
+Citrusdal,2026-08-19,0.3727,MODERATE (Inspect Traps),14.3,67.1,131.8
+Citrusdal,2026-08-20,0.3727,MODERATE (Inspect Traps),14.5,65.9,136.9
+Citrusdal,2026-08-21,0.5776,MODERATE (Inspect Traps),14.8,64.2,143.2
+Citrusdal,2026-08-22,0.6177,MODERATE (Inspect Traps),14.9,64.3,145.2
+Citrusdal,2026-08-23,0.6177,MODERATE (Inspect Traps),15.2,63.6,148.2
+Citrusdal,2026-08-24,0.6177,MODERATE (Inspect Traps),16.0,61.7,152.9
+Citrusdal,2026-08-25,0.6177,MODERATE (Inspect Traps),16.7,59.6,157.8
+Stellenbosch,2026-08-12,0.3594,MODERATE (Inspect Traps),13.6,71.2,85.2
+Stellenbosch,2026-08-13,0.3594,MODERATE (Inspect Traps),14.0,70.0,93.4
+Stellenbosch,2026-08-14,0.3594,MODERATE (Inspect Traps),14.0,70.5,95.1
+Stellenbosch,2026-08-15,0.3594,MODERATE (Inspect Traps),13.8,72.9,95.9
+Stellenbosch,2026-08-16,0.3594,MODERATE (Inspect Traps),13.4,75.4,95.4
+Stellenbosch,2026-08-17,0.3594,MODERATE (Inspect Traps),13.2,77.6,97.6
+Stellenbosch,2026-08-18,0.3594,MODERATE (Inspect Traps),13.0,78.1,100.3
+Stellenbosch,2026-08-19,0.3594,MODERATE (Inspect Traps),12.9,77.9,100.1
+Stellenbosch,2026-08-20,0.3594,MODERATE (Inspect Traps),13.0,77.0,102.0
+Stellenbosch,2026-08-21,0.3594,MODERATE (Inspect Traps),13.3,76.9,106.3
+Stellenbosch,2026-08-22,0.3594,MODERATE (Inspect Traps),13.4,77.1,109.3
+Stellenbosch,2026-08-23,0.3727,MODERATE (Inspect Traps),13.8,77.3,112.9
+Stellenbosch,2026-08-24,0.3727,MODERATE (Inspect Traps),14.2,77.1,116.4
+Stellenbosch,2026-08-25,0.3727,MODERATE (Inspect Traps),14.8,75.5,120.9
+Hex River Valley,2026-08-12,0.3727,MODERATE (Inspect Traps),12.0,70.1,60.3
+Hex River Valley,2026-08-13,0.3727,MODERATE (Inspect Traps),12.4,69.4,65.4
+Hex River Valley,2026-08-14,0.3727,MODERATE (Inspect Traps),12.7,69.5,70.4
+Hex River Valley,2026-08-15,0.3727,MODERATE (Inspect Traps),12.9,70.6,74.1
+Hex River Valley,2026-08-16,0.3727,MODERATE (Inspect Traps),13.0,71.0,76.1
+Hex River Valley,2026-08-17,0.3727,MODERATE (Inspect Traps),13.0,72.3,77.4
+Hex River Valley,2026-08-18,0.3727,MODERATE (Inspect Traps),12.7,74.9,80.5
+Hex River Valley,2026-08-19,0.3727,MODERATE (Inspect Traps),12.7,75.6,83.8
+Hex River Valley,2026-08-20,0.3727,MODERATE (Inspect Traps),12.9,74.6,87.1
+Hex River Valley,2026-08-21,0.3727,MODERATE (Inspect Traps),13.2,74.0,92.5
+Hex River Valley,2026-08-22,0.3727,MODERATE (Inspect Traps),13.1,75.1,94.5
+Hex River Valley,2026-08-23,0.4124,MODERATE (Inspect Traps),13.5,74.3,95.8
+Hex River Valley,2026-08-24,0.4124,MODERATE (Inspect Traps),14.0,72.6,98.3
+Hex River Valley,2026-08-25,0.4124,MODERATE (Inspect Traps),14.7,70.1,102.2
