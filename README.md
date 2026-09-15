@@ -1,96 +1,165 @@
-Multi-Model Predictive Analytics Portfolio
-This repository hosts three end-to-end Machine Learning pipelines utilizing XGBoost for time-series forecasting, risk modeling, and geospatial hazard prediction across financial markets and agricultural pest dynamics.
+# Dean-Projects — Multi-Model Predictive Analytics Portfolio
 
-📁 Repository Overview
+Three independent, end-to-end Python/XGBoost pipelines: one forecasts short-term
+price moves for stocks and crypto, and two forecast Mediterranean fruit fly
+(*Ceratitis capitata*) outbreak risk for different regions. Each pipeline follows
+the same shape — fetch raw data from a free public API, engineer features, train
+an XGBoost model, then run inference and render a chart — but the three are not
+connected to each other; each lives in its own top-level folder and is run on
+its own.
+
+## Repository layout
+
+```
 Dean-Projects/
 │
 ├── Stock_Market_Prediction/
-│   ├── Data_Transform/            # Data ingestion via yfinance & technical indicator engineering
-│   └── Training/                  # Model training, live spot price inference & trendline visualization
+│   ├── Data_Transform/   # yfinance ingestion + technical-indicator feature engineering
+│   └── Training/         # XGBoost training, live price lookup, and forecast chart
 │
-├── Mediterainia_California_Fruit_Fly/
-│   ├── data/                      # Historical trap counts, crop density, and regional climate metrics
-│   ├── preprocessing/             # Feature scaling, spatial indexing, and lag generation
-│   └── models/                    # XGBoost classifier/regressor and outbreak risk evaluation
+├── Mediterainia_California_Fruit Fly/
+│   ├── Data_Transform/   # GBIF occurrence + Open-Meteo weather ingestion, feature merge
+│   └── Training/         # XGBoost training and 14-day regional risk forecast
 │
-└── Mediteranaia Furit Fly western Cape/
-    ├── data/                      # Western Cape agricultural trap records and weather time-series
-    ├── feature_engineering/       # Microclimate features, seasonal cycles, and spatial proximity
-    └── training/                  # Model training, threshold calibration, and spatial risk mapping
+└── Mediterainaia Furit Fly western Cape/
+    ├── Data_Transform/   # GBIF occurrence + Open-Meteo weather ingestion, feature merge
+    └── Training/         # XGBoost training and 14-day regional risk forecast
+```
 
+(The California and Western Cape folder names carry a couple of long-standing
+typos — "Mediterainia"/"Mediterainaia" instead of "Mediterranean" — kept as-is
+here since they're the real, on-disk folder names the scripts below refer to.)
 
-   1. Stock & Crypto 2-Day Forecast Engine
-An automated financial pipeline that ingests daily market data, calculates 9 technical momentum indicators, and predicts 2-day forward bullish price movements across equities and cryptocurrencies.
-Key Specifications
-Target Categories:Moderate Volatility (Stocks): AAPL, MSFT, NVDA, AMZN, GOOGL ($+1\%$ target gain threshold)
-High Volatility (Crypto): BTC-USD, ETH-USD, SOL-USD, BNB-USD, DOGE-USD ($+3\%$ target gain threshold)
-Model: XGBoost Binary Classifier (stock_xgboost_model.json)
-Features: 14-day SMA, 50-day SMA, MACD, MACD Signal, RSI-14, Daily Returns, 14d Volatility, 30d Volatility, Volume Ratio.
+No project has a `requirements.txt` in the repo yet; the dependency list for
+each is given below. None of the three pipelines needs an API key or any
+secret — every external call is to a free, unauthenticated public API
+(GBIF, Open-Meteo) or to `yfinance`.
 
-# 1. Fetch raw daily market history
-/workspaces/Dean-Projects/.venv/bin/python Stock_Market_Prediction/Data_Transform/fetch_stock_data.py
+## 1. Stock & Crypto 2-Day Forecast Engine — `Stock_Market_Prediction/`
 
-# 2. Compute technical indicators & target labels
-/workspaces/Dean-Projects/.venv/bin/python Stock_Market_Prediction/Data_Transform/feature_engineering.py
+An XGBoost binary classifier that ingests daily OHLCV history via `yfinance`,
+computes technical-momentum features, and predicts whether each ticker moves
+up by a target amount over the next 2 trading days.
 
-# 3. Train XGBoost classifier
-/workspaces/Dean-Projects/.venv/bin/python Stock_Market_Prediction/Training/train_stock_xgboost.py
+- **Tickers:** Moderate-volatility stocks — AAPL, MSFT, NVDA, AMZN, GOOGL
+  (target: +1% in 2 days). High-volatility crypto — BTC-USD, ETH-USD, SOL-USD,
+  BNB-USD, DOGE-USD (target: +3% in 2 days).
+- **Features:** 14-day SMA, 50-day SMA, MACD, MACD signal, RSI-14, daily
+  return, 14-day volatility, 30-day volatility, volume ratio.
+- **Model:** `xgboost.XGBClassifier`, saved to `stock_xgboost_model.json`.
+- **Tech stack:** Python, `yfinance`, `pandas`, `numpy`, `xgboost`,
+  `scikit-learn`, `matplotlib`.
 
-# 4. Infer live forecasts & render trendlines
-/workspaces/Dean-Projects/.venv/bin/python Stock_Market_Prediction/Training/predict_stock_forecast.py
+```bash
+# 1. Fetch raw daily market history (yfinance)
+python3 Stock_Market_Prediction/Data_Transform/fetch_stock_data.py
 
-2. Mediterranean Fruit Fly Model – Western Cape
-A geospatial predictive analytics pipeline designed to evaluate and forecast Mediterranean fruit fly (Ceratitis capitata) outbreak risks across major agricultural zones (e.g., Elgin, Hex River Valley, Olifants River) in the Western Cape.
+# 2. Compute technical indicators & 2-day target labels
+python3 Stock_Market_Prediction/Data_Transform/feature_engineering.py
 
-Key Specifications
-Objective: Predict short-term population spikes and outbreak probability to optimize targeted pest management and field intervention.
+# 3. Train the XGBoost classifier
+python3 Stock_Market_Prediction/Training/train_stock_xgboost.py
 
-Model: XGBoost Classifier calibrated to local climatic patterns.
+# 4. Pull live spot prices, score the latest data, and render trendline charts
+python3 Stock_Market_Prediction/Training/predict_stock_forecast.py
+```
 
-Key Feature Set:
+## 2. Medfly Outbreak Model — Western Cape — `Mediterainaia Furit Fly western Cape/`
 
-Climatic Predictors: Mean daily temperature, relative humidity, cumulative degree days (heat accumulation for fly development), and rainfall spikes.
+A geospatial XGBoost classifier estimating Mediterranean fruit fly outbreak
+risk across Western Cape agricultural hubs (Grabouw, Ceres, Citrusdal,
+Stellenbosch, Hex River Valley), from historical GBIF occurrence records and
+Open-Meteo climate history.
 
-Biological & Spatial Features: Historical trap capture counts, host crop harvesting schedules (citrus, stone fruit, table grapes), and distance to nearby infestation hot spots.
+- **Features:** 14/30-day rolling mean temperature, relative humidity, VPD,
+  soil temperature/moisture, cumulative degree-days (base 10°C), and 14-day
+  rainfall, computed around each occurrence (outbreak) and a sampled baseline
+  (non-outbreak) date.
+- **Model:** `xgboost.XGBClassifier`, saved to `western_cape_medfly_xgboost.json`.
+- **Output:** a 14-day risk forecast per region, categorized LOW / MODERATE /
+  HIGH, plus a trendline chart and a model-performance dashboard PNG.
+- **Tech stack:** Python, `requests`, `pandas`, `numpy`, `xgboost`,
+  `scikit-learn`, `matplotlib`, `seaborn`.
 
+```bash
+# 1. Fetch historical Medfly occurrence records for the Western Cape (GBIF)
+python3 "Mediterainaia Furit Fly western Cape/Data_Transform/fetch_gbif_outbreaks.py"
 
-Execution Pipeline
-# 1. Preprocess Western Cape regional climate and trap data
-/workspaces/Dean-Projects/.venv/bin/python "Mediteranaia Furit Fly western Cape/feature_engineering/prepare_cape_data.py"
+# 2. Fetch matching historical weather data (Open-Meteo)
+python3 "Mediterainaia Furit Fly western Cape/Data_Transform/fetch_historical_weather.py"
 
-# 2. Train Western Cape outbreak model
-/workspaces/Dean-Projects/.venv/bin/python "Mediteranaia Furit Fly western Cape/training/train_cape_model.py"
+# 3. Merge occurrences with weather into the labeled training set
+python3 "Mediterainaia Furit Fly western Cape/Data_Transform/merge_gbif_weather.py"
 
-# 3. Generate regional risk probabilities
-/workspaces/Dean-Projects/.venv/bin/python "Mediteranaia Furit Fly western Cape/training/predict_cape_outbreaks.py"
+# 4. Train the XGBoost classifier and generate the performance dashboard
+python3 "Mediterainaia Furit Fly western Cape/Training/train_xgboost.py"
 
-3. Mediterranean Fruit Fly Model – California
-A predictive model tailored to California’s agricultural sectors, focusing on early detection, quarantine zone risk assessment, and invasion vector dynamics under distinct microclimates (e.g., Central Valley vs. Southern California coastal valleys).
+# 5. Fetch a live 14-day forecast per region and score outbreak risk
+python3 "Mediterainaia Furit Fly western Cape/Training/predict_western_cape_forecast.py"
+```
 
-Key Specifications
-Objective: Forecast high-probability invasion and establishment risk zones to support quarantine border monitoring and sterile insect technique (SIT) deployment strategies.
+> Note: `Data_Transform/Real World Data Generation.py` and
+> `Data_Transform/process_weather_dataset.py` are earlier drafts of steps 2
+> and 4 above (a single-year weather fetch, and a training script that reads
+> a `western_cape_medfly_training.csv` the current pipeline no longer
+> produces). They're left in the repo but superseded by the steps listed.
 
-Model: XGBoost Classifier optimized for low-prevalence/high-impact invasion events.
+## 3. Medfly Outbreak Model — California — `Mediterainia_California_Fruit Fly/`
 
-Key Feature Set:
+The same modeling approach applied to California agricultural regions
+(Fresno/Central Valley, Bakersfield, Salinas Valley, Modesto, Napa Valley),
+using GBIF occurrences filtered to a California bounding box.
 
-Environmental Drivers: Land surface temperature, vapor pressure deficit, microclimate irrigation indices, and host crop spatial density.
+- **Features:** same 14/30-day climate + degree-day feature set as the
+  Western Cape model, built from Open-Meteo weather around each occurrence.
+- **Model:** `xgboost.XGBClassifier`, saved to `california_medfly_xgboost.json`.
+- **Output:** a 14-day risk forecast per region (LOW / MODERATE / HIGH),
+  trendline chart, and model-performance dashboard PNG.
+- **Tech stack:** Python, `requests`, `pandas`, `numpy`, `xgboost`,
+  `scikit-learn`, `matplotlib`, `seaborn`.
 
-Time-Series Features: Lagged trap counts (7-day, 14-day, 30-day windows), seasonal population trendlines, and urban-agricultural boundary proximity metrics.
+```bash
+# 1. Fetch historical Medfly occurrence records for California (GBIF)
+python3 "Mediterainia_California_Fruit Fly/Data_Transform/fetch_california_gbif.py"
 
-Execution Pipeline
+# 2. Fetch matching historical weather data (Open-Meteo)
+python3 "Mediterainia_California_Fruit Fly/Data_Transform/fetch_california_weather.py"
 
-# 1. Ingest and process California environmental & trapping datasets
-/workspaces/Dean-Projects/.venv/bin/python Mediterainia_California_Fruit_Fly/preprocessing/process_ca_data.py
+# 3. Merge occurrences with weather into the labeled training set
+python3 "Mediterainia_California_Fruit Fly/Data_Transform/merge_gbif_weather.py"
 
-# 2. Train California XGBoost risk model
-/workspaces/Dean-Projects/.venv/bin/python Mediterainia_California_Fruit_Fly/models/train_ca_model.py
+# 4. Train the XGBoost classifier and generate the performance dashboard
+python3 "Mediterainia_California_Fruit Fly/Training/train_xgboost.py"
 
-# 3. Output California outbreak risk scores
-/workspaces/Dean-Projects/.venv/bin/python Mediterainia_California_Fruit_Fly/models/evaluate_ca_risk.py
+# 5. Fetch a live 14-day forecast per region and score outbreak risk
+python3 "Mediterainia_California_Fruit Fly/Training/predict_california_forecast.py"
+```
 
+## Setup
 
-Pipeline,Domain,Output Type,Primary Input Features,Primary Objective
-Stock Forecast Engine,Financial Markets,2-Day Probability & Signal,"Technical indicators, OHLCV, market volatility",Identify short-term bullish trade opportunities
-Medfly - Western Cape,Agricultural Entomology,Regional Risk Class (P≥0.50),"Local degree days, crop cycles, regional trap lags",Optimize farm-level spraying & regional monitoring
-Medfly - California,Environmental Science / Biosecurity,Spatial Invasion Likelihood,"Microclimate data, host density, boundary proximity",Target quarantine zones & SIT releases
+Requires Python 3.9+. No `requirements.txt` exists yet — install the
+dependencies used across all three pipelines directly:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
+pip install pandas numpy requests yfinance xgboost scikit-learn matplotlib seaborn
+```
+
+Then run whichever pipeline you're interested in following the numbered
+steps above — each step writes its output (a CSV, a trained model `.json`,
+or a chart `.png`) into that pipeline's own folder, and later steps read
+those outputs, so they need to run in order the first time.
+
+No environment variables or API keys are required for any of the three
+pipelines; all external data comes from GBIF and Open-Meteo (both free,
+unauthenticated public APIs) and Yahoo Finance via `yfinance`.
+
+## Pipeline comparison
+
+| Pipeline | Domain | Output | Primary inputs | Objective |
+|---|---|---|---|---|
+| Stock & Crypto Forecast | Financial markets | 2-day bullish probability & signal | Technical indicators, OHLCV, volatility | Flag short-term bullish trade opportunities |
+| Medfly — Western Cape | Agricultural entomology | Regional risk class (LOW/MODERATE/HIGH) | Degree-days, GBIF trap/occurrence history, regional weather | Prioritize spraying & trap monitoring by region |
+| Medfly — California | Environmental science / biosecurity | Regional risk class (LOW/MODERATE/HIGH) | Microclimate data, GBIF occurrence history, regional weather | Target quarantine and inspection zones |
