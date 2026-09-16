@@ -22,8 +22,9 @@ Dean-Projects/
 │   └── Training/         # XGBoost training and 14-day regional risk forecast
 │
 └── Mediterainaia Furit Fly western Cape/
-    ├── Data_Transform/   # GBIF occurrence + Open-Meteo weather ingestion, feature merge
-    └── Training/         # XGBoost training and 14-day regional risk forecast
+    ├── Data_Transform/   # GBIF occurrence + Open-Meteo weather ingestion, feature merge (v1)
+    ├── Training/         # XGBoost training and 14-day regional risk forecast (v1 + v2)
+    └── railway_app/      # FastAPI service deploying the v2 regressor live on Railway
 ```
 
 (The California and Western Cape folder names carry a couple of long-standing
@@ -104,6 +105,66 @@ python3 "Mediterainaia Furit Fly western Cape/Training/predict_western_cape_fore
 > a `western_cape_medfly_training.csv` the current pipeline no longer
 > produces). They're left in the repo but superseded by the steps listed.
 
+### 2b. Medfly Outbreak Model — Western Cape v2 (real trap-count data, deployed on Railway)
+
+The v1 model above learns from 45 sparse GBIF occurrence points, with
+synthetic "no outbreak" negatives sampled only from June/July/August — a
+label-quality ceiling on what it can claim. This second version replaces
+that proxy entirely with real historical Medfly trap-count data (FTD = flies
+per trap per day), shared by an industry contact (Ghian du Toit) as weekly
+regional summaries covering 2010–2026 across five Western Cape farming
+districts: Warm Bokkeveld, Wolseley, Tulbagh, Elgin & Grabouw, and Vyeboom.
+
+It's a **regressor**, not a classifier — it predicts the actual FTD value
+for a region/week from the preceding weather, rather than a binary
+outbreak/no-outbreak label. Risk levels (LOW/MODERATE/HIGH) are derived from
+the 35th/65th percentile of observed FTD in the training data; these are a
+data-driven proxy, not an entomological industry standard, and are labelled
+as such everywhere they're surfaced.
+
+The v1 classifier is kept unchanged as a deliberate comparison baseline —
+see the comparative study for what changes between a presence-only proxy
+label and real ground-truth trap data on the same modeling approach.
+
+```bash
+# 1. Parse the trap-count workbook into a long-format CSV (one row per region/year/week)
+python3 "Mediterainaia Furit Fly western Cape/Data_Transform/parse_ftd_excel.py" --input path/to/FTDs_multiple_years_Dean.xlsx
+
+# 2. Geocode the five trap regions (Open-Meteo geocoding API)
+python3 "Mediterainaia Furit Fly western Cape/Data_Transform/geocode_regions.py"
+
+# 3. Fetch matching historical daily weather per region (Open-Meteo archive API)
+python3 "Mediterainaia Furit Fly western Cape/Data_Transform/fetch_weather_history_v2.py"
+
+# 4. Merge FTD values with preceding 14/30-day weather windows into the regression training set
+python3 "Mediterainaia Furit Fly western Cape/Data_Transform/merge_ftd_weather.py"
+
+# 5. Train the XGBoost regressor and generate the performance dashboard (RMSE / MAE / R^2)
+python3 "Mediterainaia Furit Fly western Cape/Training/train_xgboost_regressor.py"
+
+# 6. Fetch a live 14-day forecast per region and predict FTD
+python3 "Mediterainaia Furit Fly western Cape/Training/predict_western_cape_forecast_v2.py"
+```
+
+Step 1 needs the source `.xlsx` (not committed to this repo — it's a private
+data share, kept local); its output, `wc_trap_ftd_long.csv`, *is* committed,
+so steps 2–6 don't need the original file.
+
+**Deployed live on Railway** (`railway_app/`): a small FastAPI service
+wrapping steps 2–6 as HTTP endpoints, since this pipeline needs outbound
+internet access to Open-Meteo that isn't available in every dev environment
+this project has been built in.
+
+- `GET /health` — liveness check, reports whether a model is currently trained.
+- `POST /pipeline/run` — runs geocoding → weather fetch → merge → train. Safe
+  to re-run to refresh the model as more FTD data comes in.
+- `GET /forecast` — live 14-day FTD forecast per region as JSON.
+- `GET /forecast/chart` — the trendline PNG from the most recent forecast.
+
+Railway service settings: root directory `Mediterainaia Furit Fly western
+Cape/railway_app`, build via Nixpacks (`requirements.txt` in that folder),
+start command in `railway.json`/`Procfile`.
+
 ## 3. Medfly Outbreak Model — California — `Mediterainia_California_Fruit Fly/`
 
 The same modeling approach applied to California agricultural regions
@@ -144,7 +205,10 @@ dependencies used across all three pipelines directly:
 python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
-pip install pandas numpy requests yfinance xgboost scikit-learn matplotlib seaborn
+pip install pandas numpy requests yfinance xgboost scikit-learn matplotlib seaborn openpyxl
+
+# Additionally, to run the Western Cape v2 Railway service locally:
+pip install fastapi "uvicorn[standard]"
 ```
 
 Then run whichever pipeline you're interested in following the numbered
