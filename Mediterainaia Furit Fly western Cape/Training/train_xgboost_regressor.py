@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime, timezone
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,6 +15,7 @@ DATA_PATH = os.path.join(SCRIPT_DIR, "..", "Data_Transform", "wc_v2_training_reg
 MODEL_PATH = os.path.join(SCRIPT_DIR, "western_cape_medfly_regressor.json")
 DASHBOARD_PATH = os.path.join(SCRIPT_DIR, "medfly_regressor_dashboard.png")
 THRESHOLDS_PATH = os.path.join(SCRIPT_DIR, "wc_v2_risk_thresholds.json")
+METRICS_PATH = os.path.join(SCRIPT_DIR, "wc_v2_model_metrics.json")
 
 FEATURE_COLUMNS = [
     "temp_14d_mean", "temp_30d_mean", "humidity_14d_mean",
@@ -134,6 +136,20 @@ axes[1, 1].text(
 plt.tight_layout(rect=[0, 0, 1, 0.95])
 plt.savefig(DASHBOARD_PATH, dpi=300)
 plt.close()
+
+# Machine-readable metrics for the dashboard UI, alongside the PNG.
+with open(METRICS_PATH, "w") as f:
+    json.dump({
+        "trained_at": datetime.now(timezone.utc).isoformat(),
+        "n_samples": int(len(df)),
+        "n_regions": int(df["region"].nunique()),
+        "year_min": int(df["year"].min()),
+        "year_max": int(df["year"].max()),
+        "rmse": rmse,
+        "mae": mae,
+        "r2": r2,
+        "feature_importance": {k: float(v) for k, v in importance.items()},
+    }, f, indent=2)
 
 print(f"\n================ SUCCESS ================")
 print(f"RMSE: {rmse:.4f} | MAE: {mae:.4f} | R^2: {r2:.4f}")

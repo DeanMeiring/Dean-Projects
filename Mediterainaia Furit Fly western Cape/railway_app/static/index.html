@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Western Cape Medfly Outbreak Dashboard</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --card-bg: #ffffff;
+    --text: #1a2233;
+    --text-dim: #5b6472;
+    --border: #e2e6ed;
+    --accent: #2b5c8f;
+    --accent-dim: #dce8f5;
+    --low: #2e8b57;
+    --moderate: #d98c00;
+    --high: #c0392b;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1420;
+      --card-bg: #171e2c;
+      --text: #e8ecf3;
+      --text-dim: #9aa5b6;
+      --border: #2a3345;
+      --accent: #6fa8d8;
+      --accent-dim: #1c3049;
+      --low: #4caf7d;
+      --moderate: #e0a83e;
+      --high: #e0685a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 24px 16px 64px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .subtitle { color: var(--text-dim); font-size: 0.95rem; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.8rem; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+    background: var(--accent-dim); color: var(--accent); margin-left: 8px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .dot.off { background: var(--text-dim); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .card {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .card h3 { margin: 0 0 10px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); }
+  .card .big { font-size: 1.8rem; font-weight: 700; }
+  .card .note { font-size: 0.82rem; color: var(--text-dim); margin-top: 4px; }
+  section { margin-bottom: 32px; }
+  section > h2 { font-size: 1.1rem; margin: 0 0 12px; display: flex; align-items: center; gap: 10px; }
+  .panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  button {
+    background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  #train-status { margin-top: 12px; font-size: 0.88rem; color: var(--text-dim); white-space: pre-wrap; font-family: var(--mono); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-dim); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; }
+  .risk { display: inline-block; padding: 2px 9px; border-radius: 999px; font-weight: 700; font-size: 0.76rem; }
+  .risk.low { background: color-mix(in srgb, var(--low) 18%, transparent); color: var(--low); }
+  .risk.moderate { background: color-mix(in srgb, var(--moderate) 18%, transparent); color: var(--moderate); }
+  .risk.high { background: color-mix(in srgb, var(--high) 18%, transparent); color: var(--high); }
+  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
+  .charts figure { margin: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+  .charts img { width: 100%; border-radius: 6px; display: block; }
+  .charts figcaption { font-size: 0.82rem; color: var(--text-dim); margin-top: 8px; }
+  .empty { color: var(--text-dim); font-size: 0.9rem; padding: 20px 0; text-align: center; }
+  .region-tag { font-size: 0.78rem; color: var(--text-dim); background: var(--accent-dim); border-radius: 6px; padding: 2px 8px; margin: 2px; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Western Cape Medfly Outbreak Dashboard <span id="health-badge" class="badge"><span class="dot off"></span>checking…</span></h1>
+    <div class="subtitle">XGBoost regressor trained on real trap-count (FTD) data · compared against the original GBIF-proxy classifier</div>
+  </header>
+
+  <section>
+    <h2>Dataset &amp; model status</h2>
+    <div class="grid" id="stats-grid">
+      <div class="card"><h3>Loading</h3><div class="note">Fetching /stats…</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Training pipeline</h2>
+    <div class="panel">
+      <p class="note" style="margin-top:0">
+        Runs geocoding → historical weather fetch → feature merge → XGBoost regressor training,
+        live against Open-Meteo. Safe to re-run as new trap-count data comes in.
+      </p>
+      <button id="train-btn" onclick="runTraining()">Run training pipeline</button>
+      <button class="secondary" onclick="loadStats(); loadForecast();" style="margin-left:8px">Refresh</button>
+      <div id="train-status"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Live 14-day forecast</h2>
+    <div class="panel" id="forecast-panel">
+      <div class="empty">Loading…</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Model performance</h2>
+    <div class="charts">
+      <figure>
+        <img src="/dashboard/regressor.png" onerror="this.parentElement.style.display='none'">
+        <figcaption>v2 — real trap-data regressor (predicted vs. actual, residuals, feature importance)</figcaption>
+      </figure>
+      <figure>
+        <img src="/dashboard/classifier.png" onerror="this.parentElement.style.display='none'">
+        <figcaption>v1 — GBIF-proxy classifier, kept as a comparison baseline</figcaption>
+      </figure>
+      <figure>
+        <img src="/forecast/chart" onerror="this.parentElement.style.display='none'">
+        <figcaption>Latest 14-day FTD forecast trendline per region</figcaption>
+      </figure>
+    </div>
+  </section>
+</div>
+
+<script>
+const fmt = (n, d=3) => (n === null || n === undefined) ? "—" : Number(n).toFixed(d);
+
+function riskClass(level) {
+  if (!level) return "low";
+  const l = level.toLowerCase();
+  if (l.startsWith("high")) return "high";
+  if (l.startsWith("moderate")) return "moderate";
+  return "low";
+}
+
+async function loadHealth() {
+  const badge = document.getElementById("health-badge");
+  try {
+    const r = await fetch("/health");
+    const j = await r.json();
+    badge.innerHTML = `<span class="dot" style="color:${j.model_trained ? 'var(--low)' : 'var(--moderate)'}"></span>${j.model_trained ? "v2 model trained" : "v2 not trained yet"}`;
+  } catch (e) {
+    badge.innerHTML = `<span class="dot off"></span>unreachable`;
+  }
+}
+
+async function loadStats() {
+  const grid = document.getElementById("stats-grid");
+  try {
+    const r = await fetch("/stats");
+    const s = await r.json();
+    const cards = [];
+
+    if (s.trap_dataset) {
+      const regionTags = s.trap_dataset.regions.map(r => `<span class="region-tag">${r}</span>`).join("");
+      cards.push(`
+        <div class="card">
+          <h3>Trap-count dataset</h3>
+          <div class="big">${s.trap_dataset.total_records.toLocaleString()}</div>
+          <div class="note">region-weeks, ${s.trap_dataset.year_min}–${s.trap_dataset.year_max}</div>
+          <div style="margin-top:8px">${regionTags}</div>
+        </div>`);
+    } else {
+      cards.push(`<div class="card"><h3>Trap-count dataset</h3><div class="note">wc_trap_ftd_long.csv not found</div></div>`);
+    }
+
+    cards.push(`
+      <div class="card">
+        <h3>v1 — GBIF classifier</h3>
+        <div class="big">${s.v1_classifier.trained ? "Trained" : "Not trained"}</div>
+        <div class="note">${s.v1_classifier.label_source}</div>
+      </div>`);
+
+    if (s.v2_metrics) {
+      const m = s.v2_metrics;
+      cards.push(`
+        <div class="card">
+          <h3>v2 — trap-data regressor</h3>
+          <div class="big">R&sup2; ${fmt(m.r2)}</div>
+          <div class="note">RMSE ${fmt(m.rmse)} · MAE ${fmt(m.mae)} · ${m.n_samples.toLocaleString()} samples</div>
+        </div>`);
+    } else {
+      cards.push(`
+        <div class="card">
+          <h3>v2 — trap-data regressor</h3>
+          <div class="big">Not trained</div>
+          <div class="note">Run the training pipeline below</div>
+        </div>`);
+    }
+
+    if (s.v2_thresholds) {
+      cards.push(`
+        <div class="card">
+          <h3>Risk thresholds (data-driven)</h3>
+          <div class="big">${fmt(s.v2_thresholds.low_moderate_boundary)} / ${fmt(s.v2_thresholds.moderate_high_boundary)}</div>
+          <div class="note">LOW→MODERATE / MODERATE→HIGH FTD boundaries, 35th/65th percentile — not an entomological standard</div>
+        </div>`);
+    }
+
+    grid.innerHTML = cards.join("");
+  } catch (e) {
+    grid.innerHTML = `<div class="card"><h3>Error</h3><div class="note">${e}</div></div>`;
+  }
+}
+
+async function loadForecast() {
+  const panel = document.getElementById("forecast-panel");
+  try {
+    const r = await fetch("/forecast");
+    if (r.status === 409) {
+      panel.innerHTML = `<div class="empty">Model not trained yet — run the training pipeline above first.</div>`;
+      return;
+    }
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      panel.innerHTML = `<div class="empty">Forecast failed: ${j.detail || r.status}</div>`;
+      return;
+    }
+    const j = await r.json();
+    if (!j.forecast || !j.forecast.length) {
+      panel.innerHTML = `<div class="empty">No forecast rows returned.</div>`;
+      return;
+    }
+    const rows = j.forecast.map(f => `
+      <tr>
+        <td>${f.Region}</td>
+        <td>${f.Date}</td>
+        <td>${fmt(f.Predicted_FTD)}</td>
+        <td><span class="risk ${riskClass(f.Risk_Level)}">${f.Risk_Level}</span></td>
+        <td>${fmt(f.Temp_14d_Mean, 1)}°C</td>
+        <td>${fmt(f.Humidity_14d_Mean, 1)}%</td>
+      </tr>`).join("");
+    panel.innerHTML = `
+      <table>
+        <thead><tr><th>Region</th><th>Date</th><th>Predicted FTD</th><th>Risk</th><th>Temp (14d)</th><th>Humidity (14d)</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  } catch (e) {
+    panel.innerHTML = `<div class="empty">Could not load forecast: ${e}</div>`;
+  }
+}
+
+async function runTraining() {
+  const btn = document.getElementById("train-btn");
+  const status = document.getElementById("train-status");
+  btn.disabled = true;
+  status.textContent = "Running geocode → weather fetch → merge → train... this can take a few minutes.";
+  try {
+    const r = await fetch("/pipeline/run", { method: "POST" });
+    const j = await r.json();
+    if (!r.ok) {
+      status.textContent = `Pipeline failed: ${j.detail || r.status}`;
+    } else {
+      status.textContent = `Trained successfully. Model saved to ${j.model_path}`;
+      await loadHealth();
+      await loadStats();
+      await loadForecast();
+    }
+  } catch (e) {
+    status.textContent = `Request failed: ${e}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+loadHealth();
+loadStats();
+loadForecast();
+</script>
+</body>
+</html>
