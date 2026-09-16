@@ -99,6 +99,13 @@
   </section>
 
   <section>
+    <h2>Region geocoding — verify before trusting the numbers</h2>
+    <div class="panel" id="geocoding-panel">
+      <div class="empty">Loading…</div>
+    </div>
+  </section>
+
+  <section>
     <h2>Training pipeline</h2>
     <div class="panel">
       <p class="note" style="margin-top:0">
@@ -213,6 +220,29 @@ async function loadStats() {
     }
 
     grid.innerHTML = cards.join("");
+
+    const geoPanel = document.getElementById("geocoding-panel");
+    if (s.region_geocoding) {
+      const rows = Object.entries(s.region_geocoding).map(([region, g]) => `
+        <tr>
+          <td>${region}</td>
+          <td>${g.matched_name ?? "—"}</td>
+          <td>${g.admin1 ?? "—"}</td>
+          <td>${fmt(g.lat, 4)}, ${fmt(g.lon, 4)}</td>
+          <td>${g.query_used ?? "—"}</td>
+        </tr>`).join("");
+      geoPanel.innerHTML = `
+        <p class="note" style="margin-top:0">
+          Verify these before trusting the forecast — a region matched to the wrong real-world
+          place silently pulls weather data for somewhere else entirely.
+        </p>
+        <table>
+          <thead><tr><th>Region (trap data)</th><th>Matched to</th><th>Province/State</th><th>Lat, Lon</th><th>Query used</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    } else {
+      geoPanel.innerHTML = `<div class="empty">Not geocoded yet — runs as the first step of the training pipeline.</div>`;
+    }
   } catch (e) {
     grid.innerHTML = `<div class="card"><h3>Error</h3><div class="note">${e}</div></div>`;
   }
@@ -255,22 +285,48 @@ async function loadForecast() {
   }
 }
 
+async function pollPipelineStatus() {
+  const status = document.getElementById("train-status");
+  while (true) {
+    let s;
+    try {
+      s = await (await fetch("/pipeline/status")).json();
+    } catch (e) {
+      status.textContent = `Lost connection while polling: ${e}`;
+      return false;
+    }
+    if (s.status === "running") {
+      status.textContent = `Running: ${s.step || "starting"}...`;
+    } else if (s.status === "success") {
+      status.textContent = `Trained successfully (finished ${s.finished_at}).`;
+      return true;
+    } else if (s.status === "failed") {
+      status.textContent = `Pipeline failed:\n${s.error || "unknown error"}`;
+      return false;
+    } else {
+      status.textContent = "Idle.";
+      return false;
+    }
+    await new Promise(res => setTimeout(res, 3000));
+  }
+}
+
 async function runTraining() {
   const btn = document.getElementById("train-btn");
   const status = document.getElementById("train-status");
   btn.disabled = true;
-  status.textContent = "Running geocode → weather fetch → merge → train... this can take a few minutes.";
+  status.textContent = "Starting geocode → weather fetch → merge → train pipeline...";
   try {
     const r = await fetch("/pipeline/run", { method: "POST" });
     const j = await r.json();
     if (!r.ok) {
-      status.textContent = `Pipeline failed: ${j.detail || r.status}`;
-    } else {
-      status.textContent = `Trained successfully. Model saved to ${j.model_path}`;
-      await loadHealth();
-      await loadStats();
-      await loadForecast();
+      status.textContent = `Could not start pipeline: ${j.detail || r.status}`;
+      return;
     }
+    const succeeded = await pollPipelineStatus();
+    await loadHealth();
+    await loadStats();
+    if (succeeded) await loadForecast();
   } catch (e) {
     status.textContent = `Request failed: ${e}`;
   } finally {
@@ -278,9 +334,26 @@ async function runTraining() {
   }
 }
 
+// If a pipeline run is already in progress (e.g. AUTO_TRAIN_ON_START kicked
+// one off on boot), pick up polling it instead of sitting idle.
+async function resumeIfRunning() {
+  try {
+    const s = await (await fetch("/pipeline/status")).json();
+    if (s.status === "running") {
+      document.getElementById("train-btn").disabled = true;
+      const succeeded = await pollPipelineStatus();
+      await loadHealth();
+      await loadStats();
+      if (succeeded) await loadForecast();
+      document.getElementById("train-btn").disabled = false;
+    }
+  } catch (e) { /* non-fatal — button still works manually */ }
+}
+
 loadHealth();
 loadStats();
 loadForecast();
+resumeIfRunning();
 </script>
 </body>
 </html>
