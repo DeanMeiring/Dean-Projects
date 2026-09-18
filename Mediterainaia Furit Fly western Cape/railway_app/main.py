@@ -6,6 +6,12 @@ This process has normal outbound internet access (unlike the sandbox this
 pipeline was originally written in), so it's the one place the geocoding /
 historical weather / live forecast calls to Open-Meteo actually run.
 
+All pipeline logic lives in `pipeline.py`, self-contained within this
+directory — see that file's docstring for why (Railway's "root directory"
+service setting scopes the build to `railway_app/` only, so this module
+cannot reach the sibling `Data_Transform/`/`Training/` folders the CLI
+scripts live in).
+
 Endpoints:
   GET  /                 - HTML dashboard (dataset stats, model status, live forecast, charts)
   GET  /health           - liveness check
@@ -31,8 +37,6 @@ check the Railway deploy waits on).
 """
 import json
 import os
-import runpy
-import sys
 import threading
 import traceback
 from datetime import datetime, timezone
@@ -41,29 +45,16 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-WC_DIR = os.path.dirname(APP_DIR)  # "...Mediterainaia Furit Fly western Cape"
-DATA_TRANSFORM_DIR = os.path.join(WC_DIR, "Data_Transform")
-TRAINING_DIR = os.path.join(WC_DIR, "Training")
-STATIC_DIR = os.path.join(APP_DIR, "static")
+import pipeline
 
-# These directories have spaces in their path components, which is fine for
-# sys.path (it's just a string) — only the `import <module>` names below need
-# to be valid identifiers, and they are.
-sys.path.insert(0, DATA_TRANSFORM_DIR)
-sys.path.insert(0, TRAINING_DIR)
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(APP_DIR, "static")
+DATA_DIR = os.path.join(APP_DIR, "data")
 
 app = FastAPI(title="Western Cape Medfly Forecast API", version="2.0.0")
 
-MODEL_PATH = os.path.join(TRAINING_DIR, "western_cape_medfly_regressor.json")
-CHART_PATH = os.path.join(TRAINING_DIR, "wc_v2_ftd_forecast_trendlines.png")
-THRESHOLDS_PATH = os.path.join(TRAINING_DIR, "wc_v2_risk_thresholds.json")
-METRICS_PATH = os.path.join(TRAINING_DIR, "wc_v2_model_metrics.json")
-FTD_LONG_PATH = os.path.join(DATA_TRANSFORM_DIR, "wc_trap_ftd_long.csv")
-V1_MODEL_PATH = os.path.join(TRAINING_DIR, "western_cape_medfly_xgboost.json")
-V2_REGRESSOR_DASHBOARD_PATH = os.path.join(TRAINING_DIR, "medfly_regressor_dashboard.png")
-V1_CLASSIFIER_DASHBOARD_PATH = os.path.join(TRAINING_DIR, "medfly_model_dashboard.png")
-REGION_COORDS_PATH = os.path.join(DATA_TRANSFORM_DIR, "wc_v2_region_coords.json")
+V1_MODEL_PATH = os.path.join(DATA_DIR, "western_cape_medfly_xgboost.json")
+V1_CLASSIFIER_DASHBOARD_PATH = os.path.join(DATA_DIR, "medfly_model_dashboard.png")
 
 _pipeline_lock = threading.Lock()
 _pipeline_state = {
@@ -76,34 +67,10 @@ _pipeline_state = {
 
 
 def _run_pipeline_locked():
-    """The actual geocode -> fetch -> merge -> train sequence. Runs on a
-    background thread; updates _pipeline_state as it goes so /pipeline/status
-    has something meaningful to report while a run is in flight."""
-    import geocode_regions
-    import fetch_weather_history_v2
-    import merge_ftd_weather
-
-    train_script_path = os.path.join(TRAINING_DIR, "train_xgboost_regressor.py")
-
-    # status/started_at are already set by _start_pipeline_if_idle before
-    # this thread was launched — only this thread touches step/error/finished_at.
+    """Runs on a background thread; updates _pipeline_state as it goes so
+    /pipeline/status has something meaningful to report while in flight."""
     try:
-        _pipeline_state["step"] = "geocoding regions"
-        geocode_regions.main()
-
-        _pipeline_state["step"] = "fetching historical weather"
-        fetch_weather_history_v2.main()
-
-        _pipeline_state["step"] = "merging FTD + weather"
-        merge_ftd_weather.main()
-
-        _pipeline_state["step"] = "training regressor"
-        # train_xgboost_regressor.py is a flat script (matches the existing
-        # repo's classifier-training style), not a function — run it fresh
-        # with runpy each call so re-training actually re-executes rather
-        # than hitting Python's module-import cache on a second run.
-        runpy.run_path(train_script_path, run_name="__main__")
-
+        pipeline.run_full_pipeline(on_step=lambda name: _pipeline_state.__setitem__("step", name))
         _pipeline_state.update(status="success", step="done")
     except Exception:
         _pipeline_state.update(status="failed", error=traceback.format_exc())
@@ -133,7 +100,7 @@ def _start_pipeline_if_idle():
 @app.on_event("startup")
 def _maybe_auto_train():
     if os.environ.get("AUTO_TRAIN_ON_START", "").lower() in ("1", "true", "yes"):
-        if not os.path.exists(MODEL_PATH):
+        if not os.path.exists(pipeline.MODEL_PATH):
             _start_pipeline_if_idle()
 
 
@@ -146,7 +113,7 @@ def dashboard():
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "model_trained": os.path.exists(MODEL_PATH)}
+    return {"status": "ok", "model_trained": os.path.exists(pipeline.MODEL_PATH)}
 
 
 @app.get("/stats")
@@ -158,7 +125,7 @@ def get_stats():
             "target": "binary outbreak/no-outbreak classification",
         },
         "v2_regressor": {
-            "trained": os.path.exists(MODEL_PATH),
+            "trained": os.path.exists(pipeline.MODEL_PATH),
             "label_source": "real trap-count data (FTD), shared by industry contact",
             "target": "continuous FTD regression",
         },
@@ -168,8 +135,8 @@ def get_stats():
         "region_geocoding": None,
     }
 
-    if os.path.exists(FTD_LONG_PATH):
-        df = pd.read_csv(FTD_LONG_PATH)
+    if os.path.exists(pipeline.FTD_LONG_PATH):
+        df = pd.read_csv(pipeline.FTD_LONG_PATH)
         stats["trap_dataset"] = {
             "total_records": int(len(df)),
             "regions": sorted(df["region"].unique().tolist()),
@@ -178,16 +145,16 @@ def get_stats():
             "records_per_region": df.groupby("region").size().to_dict(),
         }
 
-    if os.path.exists(METRICS_PATH):
-        with open(METRICS_PATH) as f:
+    if os.path.exists(pipeline.METRICS_PATH):
+        with open(pipeline.METRICS_PATH) as f:
             stats["v2_metrics"] = json.load(f)
 
-    if os.path.exists(THRESHOLDS_PATH):
-        with open(THRESHOLDS_PATH) as f:
+    if os.path.exists(pipeline.THRESHOLDS_PATH):
+        with open(pipeline.THRESHOLDS_PATH) as f:
             stats["v2_thresholds"] = json.load(f)
 
-    if os.path.exists(REGION_COORDS_PATH):
-        with open(REGION_COORDS_PATH) as f:
+    if os.path.exists(pipeline.COORDS_PATH):
+        with open(pipeline.COORDS_PATH) as f:
             stats["region_geocoding"] = json.load(f)
 
     return stats
@@ -196,12 +163,9 @@ def get_stats():
 @app.post("/pipeline/run")
 def run_pipeline():
     """Kick off geocode -> fetch weather history -> merge -> train in the
-    background and return immediately. Requires
-    `Data_Transform/wc_trap_ftd_long.csv` to already be committed in the repo
-    (produced by parse_ftd_excel.py, which needs the source .xlsx that isn't
-    checked in — that step runs once, locally, not here). Poll
-    GET /pipeline/status for progress; check /stats.region_geocoding once it
-    finishes to verify each region matched the right real-world place.
+    background and return immediately. Poll GET /pipeline/status for
+    progress; check /stats.region_geocoding once it finishes to verify each
+    region matched the right real-world place.
     """
     started = _start_pipeline_if_idle()
     return {"request": "started" if started else "already_running", **_pipeline_state}
@@ -214,17 +178,15 @@ def pipeline_status():
 
 @app.get("/forecast")
 def get_forecast():
-    if not os.path.exists(MODEL_PATH):
+    if not os.path.exists(pipeline.MODEL_PATH):
         raise HTTPException(
             status_code=409,
             detail="Model not trained yet. POST /pipeline/run first.",
         )
 
-    import predict_western_cape_forecast_v2 as predict_mod
-
     try:
-        df_forecast, thresholds = predict_mod.run_forecast()
-        predict_mod.save_outputs(df_forecast, thresholds)
+        df_forecast, thresholds = pipeline.run_forecast()
+        pipeline.save_forecast_outputs(df_forecast, thresholds)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Forecast failed: {exc}") from exc
 
@@ -236,19 +198,19 @@ def get_forecast():
 
 @app.get("/forecast/chart")
 def get_forecast_chart():
-    if not os.path.exists(CHART_PATH):
+    if not os.path.exists(pipeline.FORECAST_CHART_PATH):
         raise HTTPException(
             status_code=404,
             detail="No chart yet. Call GET /forecast first to generate one.",
         )
-    return FileResponse(CHART_PATH, media_type="image/png")
+    return FileResponse(pipeline.FORECAST_CHART_PATH, media_type="image/png")
 
 
 @app.get("/dashboard/regressor.png")
 def get_regressor_dashboard():
-    if not os.path.exists(V2_REGRESSOR_DASHBOARD_PATH):
+    if not os.path.exists(pipeline.REGRESSOR_DASHBOARD_PATH):
         raise HTTPException(status_code=404, detail="v2 not trained yet. POST /pipeline/run first.")
-    return FileResponse(V2_REGRESSOR_DASHBOARD_PATH, media_type="image/png")
+    return FileResponse(pipeline.REGRESSOR_DASHBOARD_PATH, media_type="image/png")
 
 
 @app.get("/dashboard/classifier.png")
