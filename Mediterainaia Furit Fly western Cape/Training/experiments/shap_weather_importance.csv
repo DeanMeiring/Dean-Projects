@@ -1,0 +1,19 @@
+,mean_abs_shap
+Season (week sin),0.046688706
+"Temp, 90d mean",0.021824544
+Season (week cos),0.021617267
+"Soil temp, 14d mean",0.011454971
+Region: Elgin & Grabouw,0.011054244
+"Soil moisture, 14d mean",0.008652731
+"Temp, 14d mean",0.00837279
+Region: Warm Bokkeveld,0.0066115307
+"Humidity, 14d mean",0.006444767
+"Rain, 14d",0.0063239723
+"Rain, 60d",0.006321464
+"Degree-days, 90d",0.006267383
+"Temp, 30d mean",0.0054109357
+"VPD, 14d max",0.0051243072
+"Degree-days, 30d",0.004162069
+Region: Vyeboom,0.0030647526
+Region: Tulbagh,0.0027902934
+Region: Wolseley,0.00040654044

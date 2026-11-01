@@ -1,0 +1,8 @@
+model,"R2 log, 1 wk ahead, mean (SD)","R2 log, 2 wk ahead, mean (SD)","R2 log, 4 wk ahead, mean (SD)"
+XGBoost,0.54 (0.09),0.46 (0.10),0.34 (0.10)
+Random Forest,0.55 (0.09),0.46 (0.09),0.32 (0.10)
+Ridge regression,0.56 (0.08),0.43 (0.07),0.24 (0.12)
+LightGBM,0.50 (0.09),0.40 (0.11),0.29 (0.13)
+Persistence (baseline),0.43 (0.17),0.27 (0.16),-0.11 (0.26)
+Degree-day model (baseline),0.18 (0.25),0.17 (0.24),0.15 (0.19)
+Seasonal average (baseline),0.14 (0.21),0.13 (0.22),0.09 (0.21)

@@ -1,0 +1,55 @@
+model,feature,group,mean_abs_shap,share_pct
+2-week forecast,Last trap reading,Trap history,0.0376,26.6804
+2-week forecast,Season (sine of week),Season,0.0198,14.0681
+2-week forecast,Mean of last 4 readings,Trap history,0.0138,9.7558
+2-week forecast,Reading before that,Trap history,0.0107,7.625
+2-week forecast,"Degree-days (9.6°C), 60 days",Degree-days,0.0074,5.2211
+2-week forecast,"Chill portions, since 1 March",Chill (Dynamic Model),0.0059,4.1755
+2-week forecast,"Temperature, 30-day mean",Temperature,0.0047,3.3083
+2-week forecast,"Degree-days (9.6°C), 30 days",Degree-days,0.0043,3.0678
+2-week forecast,Region: Elgin & Grabouw,Region,0.0039,2.7567
+2-week forecast,"Temperature, 90-day mean",Temperature,0.0038,2.6768
+2-week forecast,"Relative humidity, 14-day mean",Moisture,0.003,2.1634
+2-week forecast,"Max wind speed, 14-day mean",Wind (Cape Doctor),0.0027,1.8827
+2-week forecast,"Degree-days (9.6°C), since 1 July",Degree-days,0.0024,1.7171
+2-week forecast,"Rainfall, 60 days",Moisture,0.0023,1.6024
+2-week forecast,"Soil temperature, 14-day mean",Temperature,0.0022,1.5647
+2-week forecast,"Max wind gust, 14 days",Wind (Cape Doctor),0.0022,1.5534
+2-week forecast,"Vapour pressure deficit, 14-day max",Moisture,0.0019,1.3717
+2-week forecast,"Soil moisture, 14-day mean",Moisture,0.0018,1.2625
+2-week forecast,"Chill portions, 30 days",Chill (Dynamic Model),0.0017,1.1972
+2-week forecast,Season (cosine of week),Season,0.0017,1.189
+2-week forecast,"Temperature, 14-day mean",Temperature,0.0017,1.1758
+2-week forecast,"Degree-days (9.6°C), 90 days",Degree-days,0.0015,1.0992
+2-week forecast,"Rainfall, 14 days",Moisture,0.0014,0.979
+2-week forecast,Weeks since last reading,Trap history,0.0009,0.6435
+2-week forecast,"Cape Doctor days, 14 days",Wind (Cape Doctor),0.0007,0.5217
+2-week forecast,Region: Warm Bokkeveld,Region,0.0005,0.3662
+2-week forecast,Region: Vyeboom,Region,0.0004,0.2636
+2-week forecast,Region: Tulbagh,Region,1e-04,0.0557
+2-week forecast,Region: Wolseley,Region,1e-04,0.0557
+Climate-only,"Chill portions, since 1 March",Chill (Dynamic Model),0.0323,18.9962
+Climate-only,Season (sine of week),Season,0.0246,14.4481
+Climate-only,"Degree-days (9.6°C), since 1 July",Degree-days,0.0141,8.2823
+Climate-only,"Temperature, 90-day mean",Temperature,0.0127,7.4391
+Climate-only,Region: Elgin & Grabouw,Region,0.0117,6.8778
+Climate-only,"Soil moisture, 14-day mean",Moisture,0.0085,4.9837
+Climate-only,Season (cosine of week),Season,0.0068,4.0049
+Climate-only,"Temperature, 14-day mean",Temperature,0.0063,3.6891
+Climate-only,"Rainfall, 14 days",Moisture,0.006,3.5435
+Climate-only,"Rainfall, 60 days",Moisture,0.0058,3.4345
+Climate-only,"Relative humidity, 14-day mean",Moisture,0.0056,3.3078
+Climate-only,"Soil temperature, 14-day mean",Temperature,0.0052,3.0784
+Climate-only,"Degree-days (9.6°C), 60 days",Degree-days,0.0043,2.5323
+Climate-only,"Temperature, 30-day mean",Temperature,0.0036,2.101
+Climate-only,Region: Warm Bokkeveld,Region,0.0034,1.998
+Climate-only,"Degree-days (9.6°C), 90 days",Degree-days,0.0033,1.918
+Climate-only,"Max wind speed, 14-day mean",Wind (Cape Doctor),0.003,1.7349
+Climate-only,"Max wind gust, 14 days",Wind (Cape Doctor),0.0028,1.6685
+Climate-only,"Degree-days (9.6°C), 30 days",Degree-days,0.0027,1.6138
+Climate-only,"Vapour pressure deficit, 14-day max",Moisture,0.0026,1.5526
+Climate-only,Region: Vyeboom,Region,0.0016,0.9628
+Climate-only,"Chill portions, 30 days",Chill (Dynamic Model),0.0016,0.9393
+Climate-only,"Cape Doctor days, 14 days",Wind (Cape Doctor),0.0008,0.4636
+Climate-only,Region: Tulbagh,Region,0.0006,0.3501
+Climate-only,Region: Wolseley,Region,1e-04,0.0798

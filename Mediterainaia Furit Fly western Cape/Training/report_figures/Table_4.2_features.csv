@@ -1,0 +1,25 @@
+Feature,Group,Source,Biological rationale
+Last trap reading,Trap history,Trap data,Current population level; populations change gradually week to week
+Reading before that,Trap history,Trap data,Direction of recent population change
+Mean of last 4 readings,Trap history,Trap data,Smooths week-to-week trap noise
+Weeks since last reading,Trap history,Trap data,How stale the latest reading is
+Season (sine of week),Season,Calendar,Annual cycle of host fruit and fly activity (peak March-May)
+Season (cosine of week),Season,Calendar,Second component of the annual cycle
+"Temperature, 14-day mean",Temperature,Open-Meteo,Development rate of immature stages rises with temperature
+"Temperature, 30-day mean",Temperature,Open-Meteo,Roughly one generation of development
+"Temperature, 90-day mean",Temperature,Open-Meteo,Season-long build-up of the population
+"Soil temperature, 14-day mean",Temperature,Open-Meteo,Pupae develop in the soil
+"Degree-days (9.6°C), 30 days",Degree-days,Derived,"Heat units above the lower developmental threshold (Grout & Stoltz, 2007)"
+"Degree-days (9.6°C), 60 days",Degree-days,Derived,About 338 degree-days complete one immature cycle
+"Degree-days (9.6°C), 90 days",Degree-days,Derived,Multi-generation heat accumulation
+"Degree-days (9.6°C), since 1 July",Degree-days,Derived,Heat accumulated since the start of spring
+"Chill portions, 30 days",Chill (Dynamic Model),Derived (hourly),"Recent winter chill (Erez et al., 1990)"
+"Chill portions, since 1 March",Chill (Dynamic Model),Derived (hourly),Winter chill governing host-tree budburst and fruit timing
+"Relative humidity, 14-day mean",Moisture,Open-Meteo,Adult survival and fecundity
+"Vapour pressure deficit, 14-day max",Moisture,Open-Meteo,Desiccation stress on adults
+"Soil moisture, 14-day mean",Moisture,Open-Meteo,Pupal survival in the soil
+"Rainfall, 14 days",Moisture,Open-Meteo,Short-term moisture
+"Rainfall, 60 days",Moisture,Open-Meteo,Seasonal moisture
+"Max wind speed, 14-day mean",Wind (Cape Doctor),Open-Meteo,Wind limits flight and trap catch
+"Max wind gust, 14 days",Wind (Cape Doctor),Open-Meteo,Extreme wind events
+"Cape Doctor days, 14 days",Wind (Cape Doctor),Derived,Strong south-easterly days; possible dispersal effect

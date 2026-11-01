@@ -1,0 +1,23 @@
+,mean_abs_shap
+Last trap reading,0.043458313
+Reading before that,0.016184626
+Season (week sin),0.014665975
+Avg of last 4 readings,0.0108743245
+"Temp, 30d mean (last wk)",0.007575243
+"Temp, 90d mean (last wk)",0.0047375057
+"Humidity, 14d mean (last wk)",0.0034524703
+"Temp, 14d mean (last wk)",0.0027514556
+"Soil temp, 14d mean (last wk)",0.0023588557
+Region: Elgin & Grabouw,0.002143422
+"Soil moisture, 14d mean (last wk)",0.0020248548
+"VPD, 14d max (last wk)",0.0020126838
+"Degree-days, 30d (last wk)",0.0018156314
+"Degree-days, 90d (last wk)",0.0017889986
+"Rain, 14d (last wk)",0.0017241952
+"Rain, 60d (last wk)",0.0016667325
+Season (week cos),0.0016402912
+Region: Tulbagh,0.0006048004
+Region: Vyeboom,0.0003546738
+Region: Warm Bokkeveld,0.00019249904
+Region: Wolseley,7.941404e-05
+Weeks since reading,3.6871425e-05
