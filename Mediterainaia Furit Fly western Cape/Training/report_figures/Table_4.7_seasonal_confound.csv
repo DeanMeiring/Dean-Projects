@@ -1,0 +1,4 @@
+Feature,Variation explained by region + week (%),"SHAP share, raw feature (%)","SHAP share, year-to-year anomaly (%)"
+"Chill portions, since 1 March",96.1,19.0,3.5
+"Degree-days (9.6°C), since 1 July",97.4,8.3,4.8
+"Temperature, 90-day mean",97.7,7.4,2.3

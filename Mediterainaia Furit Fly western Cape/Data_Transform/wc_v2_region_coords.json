@@ -1,0 +1,37 @@
+{
+  "Warm Bokkeveld": {
+    "lat": -33.01726,
+    "lon": 19.3107,
+    "matched_name": "Op-die-Berg",
+    "admin1": "Western Cape",
+    "query_used": "Op-die-Berg"
+  },
+  "Wolseley": {
+    "lat": -33.41403,
+    "lon": 19.20052,
+    "matched_name": "Wolseley",
+    "admin1": "Western Cape",
+    "query_used": "Wolseley"
+  },
+  "Tulbagh": {
+    "lat": -33.28596,
+    "lon": 19.14116,
+    "matched_name": "Tulbagh",
+    "admin1": "Western Cape",
+    "query_used": "Tulbagh"
+  },
+  "Elgin & Grabouw": {
+    "lat": -34.15152,
+    "lon": 19.01509,
+    "matched_name": "Grabouw",
+    "admin1": "Western Cape",
+    "query_used": "Grabouw"
+  },
+  "Vyeboom": {
+    "lat": -34.06638,
+    "lon": 19.10953,
+    "matched_name": "Vyeboom",
+    "admin1": "Western Cape",
+    "query_used": "Vyeboom"
+  }
+}

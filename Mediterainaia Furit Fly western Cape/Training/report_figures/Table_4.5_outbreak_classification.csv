@@ -1,0 +1,19 @@
+model,horizon_weeks,Precision_mean,Recall_mean,F1_mean,F1_sd
+Random Forest,1,0.601,0.793,0.677,0.087
+XGBoost,1,0.582,0.765,0.657,0.093
+Persistence (baseline),1,0.633,0.65,0.641,0.084
+Logistic regression,1,0.534,0.809,0.64,0.062
+Seasonal average (baseline),1,0.478,0.714,0.568,0.088
+Degree-day threshold (baseline),1,0.354,0.809,0.487,0.048
+Random Forest,2,0.598,0.77,0.665,0.095
+XGBoost,2,0.583,0.76,0.653,0.097
+Logistic regression,2,0.495,0.804,0.61,0.075
+Persistence (baseline),2,0.592,0.597,0.594,0.081
+Seasonal average (baseline),2,0.479,0.719,0.571,0.09
+Degree-day threshold (baseline),2,0.373,0.808,0.507,0.054
+Random Forest,4,0.543,0.764,0.622,0.078
+XGBoost,4,0.528,0.767,0.618,0.083
+Logistic regression,4,0.435,0.853,0.574,0.052
+Seasonal average (baseline),4,0.485,0.693,0.565,0.092
+Degree-day threshold (baseline),4,0.4,0.764,0.518,0.062
+Persistence (baseline),4,0.493,0.457,0.473,0.063

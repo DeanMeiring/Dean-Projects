@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 .venv/
 Mediterainaia Furit Fly western Cape/railway_app/artifacts/
+
+# Coursework PDFs (assignments, briefs): keep out of this public repo
+*.pdf
+
+# Large regenerable weather downloads (rebuild with fetch_hourly_and_wind.py)
+Mediterainaia Furit Fly western Cape/Data_Transform/cache_v3/
+Mediterainaia Furit Fly western Cape/Data_Transform/wc_v3_hourly_temp.csv
