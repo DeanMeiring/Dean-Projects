@@ -18,6 +18,7 @@ Railway runtime's independent copy. If you change the feature engineering,
 model config, or risk-threshold logic, change it in both places.
 """
 import json
+import logging
 import os
 import time
 from datetime import date, datetime, timezone
@@ -31,6 +32,13 @@ import requests
 import xgboost as xgb
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
+
+# This runs unattended on a background thread with no other way to observe
+# it (this pipeline's own dev sandbox has no network route to the deployed
+# service's HTTP endpoints, so /pipeline/status can't be polled from there
+# either) — logging to stdout is the only way progress and failures are
+# ever visible, via `railway logs` / the Railway dashboard.
+logger = logging.getLogger("medfly_pipeline")
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(APP_DIR, "data")
@@ -100,6 +108,11 @@ def geocode_regions():
             "admin1": found.get("admin1"),
             "query_used": used_query,
         }
+        logger.info(
+            "geocoded %r -> %r (%s), %.4f, %.4f [query=%r]",
+            region, found.get("name"), found.get("admin1"),
+            found["latitude"], found["longitude"], used_query,
+        )
 
     with open(COORDS_PATH, "w") as f:
         json.dump(coords, f, indent=2)
@@ -140,7 +153,9 @@ def fetch_weather_history(coords, df_ftd):
         start_date = f"{int(region_years.min()) - 1}-12-01"
         end_year = min(int(region_years.max()), date.today().year)
         end_date = f"{end_year}-12-31" if end_year < date.today().year else date.today().isoformat()
+        logger.info("fetching weather for %r: %s to %s", region, start_date, end_date)
         df_region = _fetch_region_weather(region, region_coords["lat"], region_coords["lon"], start_date, end_date)
+        logger.info("got %d days of weather for %r", len(df_region), region)
         frames.append(df_region)
         time.sleep(0.5)
 
@@ -196,6 +211,7 @@ def merge_ftd_weather(df_ftd, df_weather):
     df_final = pd.DataFrame.from_records(records)
     df_final = df_final[["region", "year", "week", "event_date"] + FEATURE_COLUMNS + ["ftd"]]
     df_final.to_csv(TRAINING_PATH, index=False)
+    logger.info("merged %d training rows across %d regions", len(df_final), df_final["region"].nunique())
     return df_final
 
 
@@ -243,6 +259,7 @@ def train_regressor():
         }, f, indent=2)
 
     _save_regressor_dashboard(df, y_test, y_pred, importance, rmse, mae, r2, moderate_cutoff, high_cutoff)
+    logger.info("trained regressor: rmse=%.4f mae=%.4f r2=%.4f n_samples=%d", rmse, mae, r2, len(df))
     return {"rmse": rmse, "mae": mae, "r2": r2, "n_samples": len(df)}
 
 
@@ -397,6 +414,7 @@ def run_full_pipeline(on_step=None):
     """Runs geocode -> fetch -> merge -> train. `on_step(name)` is called
     before each step, if given, so a caller can report progress."""
     def step(name):
+        logger.info("=== step: %s ===", name)
         if on_step:
             on_step(name)
 

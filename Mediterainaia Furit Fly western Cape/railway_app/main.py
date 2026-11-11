@@ -36,6 +36,7 @@ boot if no model exists yet (background thread; doesn't block the health
 check the Railway deploy waits on).
 """
 import json
+import logging
 import os
 import threading
 import traceback
@@ -46,6 +47,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 
 import pipeline
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logger = logging.getLogger("medfly_api")
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(APP_DIR, "static")
@@ -69,11 +73,15 @@ _pipeline_state = {
 def _run_pipeline_locked():
     """Runs on a background thread; updates _pipeline_state as it goes so
     /pipeline/status has something meaningful to report while in flight."""
+    logger.info("pipeline run starting")
     try:
-        pipeline.run_full_pipeline(on_step=lambda name: _pipeline_state.__setitem__("step", name))
+        metrics = pipeline.run_full_pipeline(on_step=lambda name: _pipeline_state.__setitem__("step", name))
         _pipeline_state.update(status="success", step="done")
+        logger.info("pipeline run succeeded: %s", metrics)
     except Exception:
-        _pipeline_state.update(status="failed", error=traceback.format_exc())
+        tb = traceback.format_exc()
+        _pipeline_state.update(status="failed", error=tb)
+        logger.error("pipeline run failed:\n%s", tb)
     finally:
         _pipeline_state["finished_at"] = datetime.now(timezone.utc).isoformat()
 
@@ -99,9 +107,12 @@ def _start_pipeline_if_idle():
 
 @app.on_event("startup")
 def _maybe_auto_train():
-    if os.environ.get("AUTO_TRAIN_ON_START", "").lower() in ("1", "true", "yes"):
-        if not os.path.exists(pipeline.MODEL_PATH):
-            _start_pipeline_if_idle()
+    auto_train = os.environ.get("AUTO_TRAIN_ON_START", "").lower() in ("1", "true", "yes")
+    model_exists = os.path.exists(pipeline.MODEL_PATH)
+    logger.info("startup: AUTO_TRAIN_ON_START=%s model_exists=%s", auto_train, model_exists)
+    if auto_train and not model_exists:
+        started = _start_pipeline_if_idle()
+        logger.info("startup: auto-train pipeline started=%s", started)
 
 
 @app.get("/", response_class=HTMLResponse)
