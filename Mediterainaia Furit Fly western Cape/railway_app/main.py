@@ -1,6 +1,6 @@
 """
 Railway-deployed service for the Western Cape Medfly regressor (v2, trained
-on Ghian du Toit's real FTD trap-count data instead of GBIF occurrence proxies).
+on an industry contact's real FTD trap-count data instead of GBIF occurrence proxies).
 
 This process has normal outbound internet access (unlike the sandbox this
 pipeline was originally written in), so it's the one place the geocoding /

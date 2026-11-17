@@ -24,7 +24,7 @@ Dean-Projects/
 └── Mediterainaia Furit Fly western Cape/
     ├── Data_Transform/   # GBIF occurrence + Open-Meteo weather ingestion, feature merge (v1)
     ├── Training/         # XGBoost training and 14-day regional risk forecast (v1 + v2)
-    └── railway_app/      # FastAPI service deploying the v2 regressor live on Railway
+    └── railway_app/      # FastAPI service serving the v2 regressor (Railway deployment now offline)
 ```
 
 (The California and Western Cape folder names carry a couple of long-standing
@@ -105,13 +105,13 @@ python3 "Mediterainaia Furit Fly western Cape/Training/predict_western_cape_fore
 > a `western_cape_medfly_training.csv` the current pipeline no longer
 > produces). They're left in the repo but superseded by the steps listed.
 
-### 2b. Medfly Outbreak Model — Western Cape v2 (real trap-count data, deployed on Railway)
+### 2b. Medfly Outbreak Model — Western Cape v2 (real trap-count data; was deployed on Railway, now offline)
 
 The v1 model above learns from 45 sparse GBIF occurrence points, with
 synthetic "no outbreak" negatives sampled only from June/July/August — a
 label-quality ceiling on what it can claim. This second version replaces
 that proxy entirely with real historical Medfly trap-count data (FTD = flies
-per trap per day), shared by an industry contact (Ghian du Toit) as weekly
+per trap per day), shared by an industry contact as weekly
 regional summaries covering 2010–2026 across five Western Cape farming
 districts: Warm Bokkeveld, Wolseley, Tulbagh, Elgin & Grabouw, and Vyeboom.
 
@@ -128,7 +128,7 @@ label and real ground-truth trap data on the same modeling approach.
 
 ```bash
 # 1. Parse the trap-count workbook into a long-format CSV (one row per region/year/week)
-python3 "Mediterainaia Furit Fly western Cape/Data_Transform/parse_ftd_excel.py" --input path/to/FTDs_multiple_years_Dean.xlsx
+python3 "Mediterainaia Furit Fly western Cape/Data_Transform/parse_ftd_excel.py" --input path/to/FTDs_multiple_years.xlsx
 
 # 2. Geocode the five trap regions (Open-Meteo geocoding API)
 python3 "Mediterainaia Furit Fly western Cape/Data_Transform/geocode_regions.py"
@@ -146,11 +146,9 @@ python3 "Mediterainaia Furit Fly western Cape/Training/train_xgboost_regressor.p
 python3 "Mediterainaia Furit Fly western Cape/Training/predict_western_cape_forecast_v2.py"
 ```
 
-Step 1 needs the source `.xlsx` (not committed to this repo — it's a private
-data share, kept local); its output, `wc_trap_ftd_long.csv`, *is* committed,
-so steps 2–6 don't need the original file.
+The trap-count data is a private data share and is **not included in this repo**: neither the source `.xlsx` nor its output `wc_trap_ftd_long.csv`. Step 1 needs the `.xlsx`; steps 2–6 need `wc_trap_ftd_long.csv`.
 
-**Deployed live on Railway** (`railway_app/`): a small FastAPI service
+**Was deployed on Railway (taken offline Nov 2026; needs the private data file to run)** (`railway_app/`): a small FastAPI service
 wrapping steps 2–6 as HTTP endpoints, since this pipeline needs outbound
 internet access to Open-Meteo that isn't available in every dev environment
 this project has been built in.

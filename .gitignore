@@ -9,3 +9,8 @@ Mediterainaia Furit Fly western Cape/railway_app/artifacts/
 # Large regenerable weather downloads (rebuild with fetch_hourly_and_wind.py)
 Mediterainaia Furit Fly western Cape/Data_Transform/cache_v3/
 Mediterainaia Furit Fly western Cape/Data_Transform/wc_v3_hourly_temp.csv
+
+# Private trap-count data (kept in a private repo, never commit)
+wc_trap_ftd_long.csv
+Table_4.1_trap_data_summary.csv
+FTDs_multiple_years*.xlsx
