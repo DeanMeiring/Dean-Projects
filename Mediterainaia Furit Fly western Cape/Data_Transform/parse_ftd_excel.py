@@ -4,7 +4,7 @@ import os
 import pandas as pd
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_INPUT = os.path.join(SCRIPT_DIR, "FTDs_multiple_years_Dean.xlsx")
+DEFAULT_INPUT = os.path.join(SCRIPT_DIR, "FTDs_multiple_years.xlsx")
 DEFAULT_OUTPUT = os.path.join(SCRIPT_DIR, "wc_trap_ftd_long.csv")
 
 # Sheet name -> canonical region name used everywhere downstream.
@@ -72,7 +72,7 @@ def parse_sheet(xls, sheet_name, region):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Parse Ghian du Toit's per-region FTD workbook into a long-format CSV."
+        description="Parse an industry contact's per-region FTD workbook into a long-format CSV."
     )
     parser.add_argument("--input", default=DEFAULT_INPUT, help="Path to the FTD .xlsx workbook")
     parser.add_argument("--output", default=DEFAULT_OUTPUT, help="Path to write the long-format CSV")
@@ -81,7 +81,7 @@ def main():
     if not os.path.exists(args.input):
         raise FileNotFoundError(
             f"FTD workbook not found at '{args.input}'. Pass --input pointing at the "
-            "Excel file Ghian du Toit shared (sheets: Warm bokkeveld, Wolseley, Tulbagh, "
+            "Excel file an industry contact shared (sheets: Warm bokkeveld, Wolseley, Tulbagh, "
             "Elgin&Grabouw, Vyeboom)."
         )
 
